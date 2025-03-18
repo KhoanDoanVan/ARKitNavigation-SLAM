@@ -10,4 +10,16 @@ import ARKit
 // MARK: - DELEGATE AR Coaching View
 extension ARViewController: ARCoachingOverlayViewDelegate {
     
+    func coachingOverlayViewWillActivate(_ coachingOverlayView: ARCoachingOverlayView) {
+        
+    }
+    
+    func coachingOverlayViewDidDeactivate(_ coachingOverlayView: ARCoachingOverlayView) {
+        
+    }
+    
+    func coachingOverlayViewDidRequestSessionReset(_ coachingOverlayView: ARCoachingOverlayView) {
+        
+    }
+    
 }

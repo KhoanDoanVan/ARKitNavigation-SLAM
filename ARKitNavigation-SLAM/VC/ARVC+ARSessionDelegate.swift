@@ -11,4 +11,8 @@ import ARKit
 // MARK: - DELEGATE AR View
 extension ARViewController: ARSessionDelegate {
     
+    func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
+        return true
+    }
+    
 }

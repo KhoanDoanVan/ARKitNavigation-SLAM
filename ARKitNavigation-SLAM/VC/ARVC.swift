@@ -16,7 +16,7 @@ class ARViewController: UIViewController {
     
     // MARK: - Properties
     private var arView: ARView!
-    private var arCoachingView: ARCoachingOverlayView = ARCoachingOverlayView()
+    private var arCoachingView: ARCoachingOverlayView?
 
     private var btnFinishedScan: UIButton = {
         let button = UIButton(type: .system)
@@ -25,7 +25,7 @@ class ARViewController: UIViewController {
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 10
         button.isEnabled = false
-        button.addTarget(self, action: #selector(tapFinish), for: .touchUpInside)
+        button.addTarget(ARViewController.self, action: #selector(tapFinish), for: .touchUpInside)
         
         return button
     }()
@@ -44,32 +44,37 @@ class ARViewController: UIViewController {
     func setupARView() {
         self.arView = ARView(
             frame: .zero,
-            cameraMode: .nonAR,
+            cameraMode: .ar,
             automaticallyConfigureSession: false
         )
-        self.arView.environment.background = ARView.Environment.Background.color(AppConfig.arBgColor)
         self.arView.session.delegate = self /// Delegate
         view = arView
     }
     
     /// Setup AR Coaching View
     private func setupARCoachingView() {
-        self.arCoachingView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        self.arCoachingView.session = self.arView.session
-        self.arCoachingView.goal = .anyPlane
-        self.arCoachingView.activatesAutomatically = true
-        self.arCoachingView.delegate = self /// Delegate
+        self.arCoachingView = ARCoachingOverlayView()
+        self.arCoachingView?.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        self.arCoachingView?.session = self.arView.session
+        self.arCoachingView?.goal = .anyPlane
+        self.arCoachingView?.activatesAutomatically = true
+        self.arCoachingView?.delegate = self /// Delegate
         
         /// Add Subview
-        self.arView.addSubview(self.arCoachingView)
+        if let coachingView = self.arCoachingView {
+            coachingView.frame = self.arView.bounds
+            print("Add Coaching View")
+            self.arView.addSubview(coachingView)
+        }
     }
     
     // MARK: - View Did Load
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.addSubview(self.btnFinishedScan)
+        arView.addSubview(self.btnFinishedScan)
         self.btnFinishedScan.translatesAutoresizingMaskIntoConstraints = false
+        
         NSLayoutConstraint.activate([
             self.btnFinishedScan.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
             self.btnFinishedScan.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -98,10 +103,8 @@ class ARViewController: UIViewController {
     // MARK: - Private
     private func saveWorldMap() {
         
-        self.arView.session.getCurrentWorldMap { [weak self] worldMap, error in
-            
-            guard let self else { return }
-            
+        self.arView.session.getCurrentWorldMap { worldMap, error in
+                        
             guard let worldMap else {
                 print("Failed to get world map:\(error?.localizedDescription ?? "Unknown Error")")
                 return
@@ -119,6 +122,11 @@ class ARViewController: UIViewController {
 }
 
 extension ARViewController {
+    
+    func setup() {
+        // debugLog("AR: ARVC: setup() was called.")
+    }
+    
     /// START SESSION
     private func startSession() {
         
