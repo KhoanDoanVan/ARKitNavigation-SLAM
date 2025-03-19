@@ -26,13 +26,7 @@ struct ContentView: View {
             .background(Color.cyan)
         }
         .fullScreenCover(isPresented: $showAR) {
-            ARViewContainer()
-                .overlay {
-                    VStack {
-                        Text("Waiting")
-                        ARCoachingOverlayView()
-                    }
-                }
+            ARViewContainer(showAR: $showAR)
         }
     }
 }

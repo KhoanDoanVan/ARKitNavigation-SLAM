@@ -12,10 +12,12 @@ import SwiftUI
 
 struct ARViewContainer: UIViewControllerRepresentable {
     
+    @Binding var showAR: Bool
+    
     func makeUIViewController(context: Context) -> ARViewController {
         
-        let arVC = ARViewController()
-        arVC.setupARView()
+        let arVC = ARViewController(showAR: $showAR)
+        arVC.loadView()
         return arVC
         
     }

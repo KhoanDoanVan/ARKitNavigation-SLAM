@@ -15,8 +15,11 @@ import UIKit
 class ARViewController: UIViewController {
     
     // MARK: - Properties
-    private var arView: ARView!
+    public var arView: ARView!
     private var arCoachingView: ARCoachingOverlayView?
+    
+    public var detectedPlanes: [ARPlaneAnchor] = []
+    @Binding var showAR: Bool
 
     private var btnFinishedScan: UIButton = {
         let button = UIButton(type: .system)
@@ -24,19 +27,28 @@ class ARViewController: UIViewController {
         button.backgroundColor = .systemBlue
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 10
-        button.isEnabled = false
-        button.addTarget(ARViewController.self, action: #selector(tapFinish), for: .touchUpInside)
+        button.isEnabled = true
         
         return button
     }()
     
     
+    init(showAR: Binding<Bool>) {
+        _showAR = showAR // Gán giá trị Binding
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     // MARK: - Methods
     /// Call before view did load
     override func loadView() {
         
-        self.setupARView()
-        self.setupARCoachingView()
+        setupARView()
+        setupARCoachingView()
+        setupButtonFinish()
         
     }
     
@@ -68,10 +80,7 @@ class ARViewController: UIViewController {
         }
     }
     
-    // MARK: - View Did Load
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
+    private func setupButtonFinish() {
         arView.addSubview(self.btnFinishedScan)
         self.btnFinishedScan.translatesAutoresizingMaskIntoConstraints = false
         
@@ -81,6 +90,13 @@ class ARViewController: UIViewController {
             self.btnFinishedScan.widthAnchor.constraint(equalToConstant: 150),
             self.btnFinishedScan.heightAnchor.constraint(equalToConstant: 50)
         ])
+        
+        btnFinishedScan.addTarget(self, action: #selector(tapFinish), for: .touchUpInside)
+    }
+    
+    // MARK: - View Did Load
+    override func viewDidLoad() {
+        super.viewDidLoad()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -98,6 +114,7 @@ class ARViewController: UIViewController {
     // MARK: - Action
     @objc func tapFinish() {
         self.saveWorldMap()
+        
     }
     
     // MARK: - Private
@@ -114,6 +131,10 @@ class ARViewController: UIViewController {
                 let data = try NSKeyedArchiver.archivedData(withRootObject: worldMap, requiringSecureCoding: true)
                 UserDefaults.standard.set(data, forKey: "savedWorldMap")
                 print("WorldMap Saved Successfully!")
+                
+                self.stopSession()
+                
+                
             } catch {
                 print("Failed to save the world map:\(error.localizedDescription)")
             }
@@ -130,18 +151,21 @@ extension ARViewController {
     /// START SESSION
     private func startSession() {
         
+        
         let configuration = ARWorldTrackingConfiguration()
         configuration.planeDetection = [.horizontal, .vertical]
         configuration.environmentTexturing = .automatic
         configuration.isCollaborationEnabled = true
         
-        self.arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+        self.arView.session.run(configuration, options: [.resetTracking])
         
     }
     
     /// STOP SESSION
     private func stopSession() {
+        self.arView.session.pause()
         
+        self.showAR = false
     }
 }
 
